@@ -1,8 +1,6 @@
 import mysql.connector
 from mysql.connector import Error
 
-
-
 """
     Function: create_connection()
     Desctiption: Create a connection to the MySQL database.
@@ -13,9 +11,10 @@ from mysql.connector import Error
 def create_connection():  
     try:
         connection = mysql.connector.connect(
-            host="your_mysql_host",
-            user="your_mysql_user",
-            password="your_mysql_password",
+            host="DESKTOP-44F320G",
+            port=3306,
+            user="emailease",
+            password="Password!",
             database="email_database"
         )
         return connection
@@ -109,33 +108,49 @@ def insert_data(connection, table, data):
         except Error as e:
             print(f"Error inserting data: {str(e)}")
 
-
-def show_table_contents(connection, table):
+def fetch_user(connection, username):
+    """
+    Function: fetch_user(connection, username)
+    Description: Fetch user information from the 'users' table based on the username.
+    Parameters:
+        connection: MySQL database connection object.
+        username (str): Username of the user to fetch.
+    Returns: user_data (dict): User information as a dictionary if found, None otherwise.
+    """
     if connection is not None:
         try:
+            # Create a cursor
             cursor = connection.cursor(dictionary=True)
 
-            # Select all rows from the specified table
-            cursor.execute(f"SELECT * FROM {table}")
+            # Construct SQL query to select user by username
+            query = "SELECT * FROM users WHERE username = %s"
+            cursor.execute(query, (username,))
 
-            # Fetch all rows
-            rows = cursor.fetchall()
-
-            # Print the header
-            print(f"Contents of the '{table}' table:")
-            print("-" * 40)
-
-            # Print each row
-            for row in rows:
-                print(row)
-
-            print("-" * 40)
+            # Fetch the user data
+            user_data = cursor.fetchone()
 
             # Close the cursor
             cursor.close()
 
+            return user_data
+
         except Error as e:
-            print(f"Error retrieving data: {str(e)}")
+            print(f"Error fetching user data: {str(e)}")
+            return None
+        
+def wipe_table(connection, table_name):
+    if connection is not None:
+        try:
+            cursor = connection.cursor()
 
-            show_table_contents(connection, 'users')
+            # Delete all rows from the table
+            cursor.execute(f"DELETE FROM {table_name}")
 
+            # Commit the changes
+            connection.commit()
+
+            print(f"All rows deleted from {table_name}.")
+
+            cursor.close()
+        except Error as e:
+            print(f"Error wiping table: {str(e)}")
